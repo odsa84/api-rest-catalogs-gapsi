@@ -3,6 +3,7 @@ package com.gapsi.catalog.controller;
 import com.gapsi.catalog.domain.Article;
 import com.gapsi.catalog.dto.ArticleResponse;
 import com.gapsi.catalog.dto.ArticleUpdateRequest;
+import com.gapsi.catalog.exception.ErrorResponse;
 import com.gapsi.catalog.exception.InvalidRequestException;
 import com.gapsi.catalog.mapper.ArticleMapper;
 import com.gapsi.catalog.service.ArticleService;
@@ -45,8 +46,8 @@ public class ArticleController {
     @Operation(summary = "Obtener artículo por ID", description = "Retorna un artículo específico basado en su identificador único")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Artículo encontrado"),
-            @ApiResponse(responseCode = "400", description = "ID con formato inválido", content = @Content(schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
-            @ApiResponse(responseCode = "404", description = "Artículo no encontrado", content = @Content(schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+            @ApiResponse(responseCode = "400", description = "ID con formato inválido", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Artículo no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<ArticleResponse> getById(
             @Parameter(description = "Identificador único del artículo (exactamente 10 caracteres alfanuméricos)")
@@ -62,8 +63,8 @@ public class ArticleController {
     @Operation(summary = "Actualizar artículo parcialmente", description = "Actualiza los campos permitidos de un artículo (description y/o model)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Artículo actualizado exitosamente"),
-            @ApiResponse(responseCode = "400", description = "Error de validación", content = @Content(schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
-            @ApiResponse(responseCode = "404", description = "Artículo no encontrado", content = @Content(schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+            @ApiResponse(responseCode = "400", description = "Error de validación", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Artículo no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<ArticleResponse> update(
             @Parameter(description = "Identificador único del artículo (exactamente 10 caracteres alfanuméricos)")

@@ -14,15 +14,15 @@ API REST para gestión de artículos del catálogo. Permite consultar y actualiz
 
 | Tecnología | Versión | Descripción |
 |------------|---------|-------------|
-| Java | 21 | LTS con virtual threads y records |
-| Spring Boot | 3.4.5 | Framework principal |
-| Spring Data JPA | - | Persistencia de datos |
-| H2 Database | - | Base de datos en memoria |
-| Bean Validation | - | Validaciones declarativas |
-| SpringDoc OpenAPI | 2.8.6 | Documentación Swagger |
-| JUnit 5 + Mockito | - | Testing unitario |
-| Docker | - | Containerización |
-| Google Cloud Run | - | Plataforma serverless |
+| Java | 21      | LTS con virtual threads y records |
+| Spring Boot | 4.0.5   | Framework principal |
+| Spring Data JPA | -       | Persistencia de datos |
+| H2 Database | -       | Base de datos en memoria |
+| Bean Validation | -       | Validaciones declarativas |
+| SpringDoc OpenAPI | 3.0.3   | Documentación Swagger |
+| JUnit 5 + Mockito | -       | Testing unitario |
+| Docker | -       | Containerización |
+| Google Cloud Run | -       | Plataforma serverless |
 
 ---
 
@@ -77,10 +77,10 @@ docker run -p 8080:8080 api-rest-catalogs
 
 ```bash
 # Construir imagen
-podman build -t api-rest-catalogs .
+docker build -t api-rest-catalogs .
 
 # Ejecutar contenedor
-podman run -p 8080:8080 api-rest-catalogs
+docker run -p 8080:8080 api-rest-catalogs
 ```
 
 ### URLs locales
@@ -231,55 +231,6 @@ mvn test
 
 # Ejecutar tests con cobertura
 mvn test jacoco:report
-```
-
----
-
-## Deploy en Google Cloud Run
-
-### Prerequisitos
-
-1. Cuenta de Google Cloud Platform
-2. [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) instalado
-
-### Comandos de deploy
-
-```bash
-# Autenticarse
-gcloud auth login
-gcloud config set project TU_PROYECTO
-
-# Habilitar APIs
-gcloud services enable cloudbuild.googleapis.com run.googleapis.com artifactregistry.googleapis.com
-
-# Crear repositorio de imágenes
-gcloud artifacts repositories create catalog-repo \
-  --repository-format=docker \
-  --location=us-central1
-
-# Construir y subir imagen
-gcloud builds submit --tag us-central1-docker.pkg.dev/TU_PROYECTO/catalog-repo/api-catalog:v1
-
-# Desplegar
-gcloud run deploy api-catalog \
-  --image us-central1-docker.pkg.dev/TU_PROYECTO/catalog-repo/api-catalog:v1 \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --memory 512Mi
-```
-
-### Comandos utiles
-
-```bash
-# Ver logs
-gcloud run services logs read api-catalog --region us-central1
-
-# Obtener URL
-gcloud run services describe api-catalog --region us-central1 --format="value(status.url)"
-
-# Eliminar servicio
-gcloud run services delete api-catalog --region us-central1
 ```
 
 ---
