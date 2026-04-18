@@ -1,0 +1,282 @@
+openapi: 3.0.3
+info:
+  title: Article Catalog API
+  description: API REST para gestión de artículos del catálogo
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Articles
+    description: Operaciones sobre artículos del catálogo
+
+paths:
+  /api/v1/articles/{id}:
+    get:
+      tags:
+        - Articles
+      summary: Obtener artículo por ID
+      description: Retorna un artículo específico basado en su identificador único
+      operationId: getArticleById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador único del artículo (exactamente 10 caracteres alfanuméricos)
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9]{10}$'
+            example: ART0000001
+      responses:
+        '200':
+          description: Artículo encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleResponse'
+        '400':
+          description: ID con formato inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: '2026-04-18T10:30:00Z'
+                status: 400
+                error: Bad Request
+                message: 'Invalid article ID format. Must be exactly 10 alphanumeric characters'
+                path: /api/v1/articles/INVALID
+        '404':
+          description: Artículo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: '2026-04-18T10:30:00Z'
+                status: 404
+                error: Not Found
+                message: 'Article not found with id: ART0000001'
+                path: /api/v1/articles/ART0000001
+
+    patch:
+      tags:
+        - Articles
+      summary: Actualizar artículo parcialmente
+      description: |
+        Actualiza los campos permitidos de un artículo (description y/o model).
+
+        **Reglas:**
+        - Solo se permiten los campos `description` y `model`
+        - Al menos uno de los campos debe estar presente
+        - No se permiten campos adicionales (id, name, price)
+        - Los valores no pueden ser nulos ni vacíos
+      operationId: updateArticleById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador único del artículo (exactamente 10 caracteres alfanuméricos)
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9]{10}$'
+            example: ART0000001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleUpdateRequest'
+            examples:
+              updateBoth:
+                summary: Actualizar ambos campos
+                value:
+                  description: Nueva descripción del artículo actualizada
+                  model: MDL-2025
+              updateDescriptionOnly:
+                summary: Actualizar solo description
+                value:
+                  description: Solo actualizo la descripción
+              updateModelOnly:
+                summary: Actualizar solo model
+                value:
+                  model: MDL-NEW
+      responses:
+        '200':
+          description: Artículo actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleResponse'
+        '400':
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emptyBody:
+                  summary: Body vacío
+                  value:
+                    timestamp: '2026-04-18T10:30:00Z'
+                    status: 400
+                    error: Bad Request
+                    message: At least one field must be provided (description or model)
+                    path: /api/v1/articles/ART0000001
+                invalidField:
+                  summary: Campo no permitido
+                  value:
+                    timestamp: '2026-04-18T10:30:00Z'
+                    status: 400
+                    error: Bad Request
+                    message: 'Field not allowed for update: price'
+                    path: /api/v1/articles/ART0000001
+                validationError:
+                  summary: Error de validación de campo
+                  value:
+                    timestamp: '2026-04-18T10:30:00Z'
+                    status: 400
+                    error: Bad Request
+                    message: 'Validation failed'
+                    path: /api/v1/articles/ART0000001
+                    errors:
+                      - field: description
+                        message: must not be blank
+                      - field: model
+                        message: size must be between 1 and 10
+        '404':
+          description: Artículo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: '2026-04-18T10:30:00Z'
+                status: 404
+                error: Not Found
+                message: 'Article not found with id: ART0000001'
+                path: /api/v1/articles/ART0000001
+
+components:
+  schemas:
+    ArticleResponse:
+      type: object
+      description: Representación completa de un artículo
+      required:
+        - id
+        - name
+        - description
+        - price
+        - model
+      properties:
+        id:
+          type: string
+          description: Identificador único del artículo
+          pattern: '^[a-zA-Z0-9]{10}$'
+          minLength: 10
+          maxLength: 10
+          example: ART0000001
+        name:
+          type: string
+          description: Nombre del artículo
+          maxLength: 20
+          example: Laptop Gaming
+        description:
+          type: string
+          description: Descripción detallada del artículo
+          maxLength: 200
+          example: Laptop de alta gama para gaming con GPU dedicada
+        price:
+          type: number
+          format: double
+          description: Precio del artículo
+          minimum: 0
+          example: 1299.99
+        model:
+          type: string
+          description: Modelo del artículo
+          maxLength: 10
+          example: XG-2024
+
+    ArticleUpdateRequest:
+      type: object
+      description: |
+        Request para actualización parcial de artículo.
+        Al menos uno de los campos debe estar presente.
+        No se permiten campos adicionales.
+      additionalProperties: false
+      anyOf:
+        - required:
+            - description
+        - required:
+            - model
+      properties:
+        description:
+          type: string
+          description: Nueva descripción del artículo
+          minLength: 1
+          maxLength: 200
+          example: Descripción actualizada del artículo
+        model:
+          type: string
+          description: Nuevo modelo del artículo
+          minLength: 1
+          maxLength: 10
+          example: MDL-2025
+
+    ErrorResponse:
+      type: object
+      description: Respuesta de error estándar
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Momento en que ocurrió el error
+          example: '2026-04-18T10:30:00Z'
+        status:
+          type: integer
+          description: Código de estado HTTP
+          example: 400
+        error:
+          type: string
+          description: Descripción corta del error HTTP
+          example: Bad Request
+        message:
+          type: string
+          description: Mensaje descriptivo del error
+          example: Validation failed
+        path:
+          type: string
+          description: Path del endpoint que generó el error
+          example: /api/v1/articles/ART0000001
+        errors:
+          type: array
+          description: Lista de errores de validación (opcional)
+          items:
+            $ref: '#/components/schemas/FieldError'
+
+    FieldError:
+      type: object
+      description: Detalle de error de validación por campo
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+          description: Nombre del campo con error
+          example: description
+        message:
+          type: string
+          description: Mensaje de error del campo
+          example: must not be blank
